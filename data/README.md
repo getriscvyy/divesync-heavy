@@ -19,7 +19,3 @@ The BC/warmstart pipeline was removed; TD3 trains entirely online from real dive
 - **`post-swap/`** (2026-07-21 -- 2026-07-22, 15 dives) -- after the actuator/buoyancy device was physically swapped, changing the depth dynamics enough to require a model reset (the pre-swap model/replay buffer no longer matched reality -- see `divesync-heavy-v3-data-incomplete-runs/README` for how that was diagnosed). Training restarted fully online on this dataset, converging faster than the original cold start since the warmup/stuck-recovery/reward fixes were already in place.
 
 **Note for reuse:** `pre-swap` and `post-swap` reflect two physically different dynamical systems (same v3 software/methodology, different hardware buoyancy characteristics). Don't pool them for a single tracking-accuracy statistic without accounting for that split.
-
-## `divesync-heavy-v3-data-incomplete-runs/`
-
-Crashed/aborted experiments with no meaningful data (empty or header-only CSVs, no `metadata.json`) -- kept rather than deleted in case they're ever useful for debugging, but excluded from all of the above.
