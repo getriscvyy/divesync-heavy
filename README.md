@@ -81,14 +81,3 @@ You'll be prompted for:
 Each run creates a timestamped folder under `data/` containing `raw.csv`, `processed.csv`, `state.csv`, `boot.txt`, and `metadata.json`. After the experiment ends, `training_data.csv` is generated (merging `state.csv` and `processed.csv`), and a results plot is shown automatically if `processed.csv` exists.
 
 The first `rl`-mode run initializes a fresh TD3 model (random actor + critics) since there is no warm-start; `python/ml/td3_model.zip` and `td3_replay_buffer.pkl` are created after `finalize()` and reused/extended on subsequent RL dives.
-
-## Known Issues / Future Work
-
-- **Online (mid-dive) training instability:** periodic training updates during a dive were found to occasionally collapse the policy into a degenerate constant-action output, likely due to the critic training on too little, too-correlated data early in a dive. Online training is currently disabled by default (`online_gradient_steps=0`); all TD3 updates happen in `finalize()`, once per dive. This was directly reproduced on the first fully-online (no warm-start) dive: the policy overshot to the tank floor, recovered, then froze at a near-constant near-minimum actuator output for the remaining ~9 minutes of a ~11-minute dive despite a large, persistent tracking error. `RLController` now has a `random_warmup_decisions` phase (default 50 decisions, ~50s) where actions are sampled randomly (still delta-clamped for hardware safety) instead of drawn from the untrained actor, so the critic sees diverse transitions before any training happens.
-- **Reward scale sensitivity:** TD3 training was found to be highly sensitive to reward term magnitudes — a ~40x increase in one reward weight relative to another was sufficient to destabilize training into bang-bang actuator behavior. Current weights are tuned empirically; a more principled reward-normalization approach is a natural next step.
-- **Residual steady-state tracking error:** the current TD3 policy shows a repeatable damped-oscillation response to setpoint changes, converging to a small but consistent depth offset rather than exact tracking. Believed limited primarily by the small amount of real-dive training data available; a larger and more diverse replay buffer (more dives, more setpoint variety) is the most likely path to improvement.
-- **Battery cutoff enforcement:** `BATTERY_CUTOFF_V` is defined in `main.py` but not currently checked against live telemetry during the control loop — worth adding before longer unattended dives.
-
-## Results
-
-Comparison plots (behavior cloning, cascaded/fixed/variable PID, fixed/variable-setpoint RL, system identification, step response) are in `/results` and `/results/divesync-heavy-v1-results`.
