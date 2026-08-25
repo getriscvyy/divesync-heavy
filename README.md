@@ -23,8 +23,7 @@ divesync-heavy/
 │   │   ├── inner.py           # Inner PID loop — actuator position control
 │   │   ├── manual.py          # Gamepad/keyboard manual control
 │   │   ├── pid.py             # Outer PID depth controller
-│   │   ├── rl.py              # TD3 (fully online) depth controller
-│   │   └── waveform.py        # Square-wave setpoint/actuator generator
+│   │   └── rl.py              # TD3 (fully online) depth controller
 │   ├── core/
 │   │   ├── experiment.py      # Experiment setup, handshake, state machine
 │   │   ├── logger.py          # CSV logging (raw/processed/state)
