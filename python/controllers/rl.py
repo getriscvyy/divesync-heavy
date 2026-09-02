@@ -15,7 +15,7 @@ warnings.filterwarnings(
 )
 
 class RLController:
-    def __init__(self, stroke, w1=10.0, w2=150.0, w3=2.0, w4=5.0, tau=0.3,
+    def __init__(self, stroke, w1=10.0, w2=150.0, w3=0.0, w4=0.0, tau=0.3,
                  exploration_sigma=0.02, gradient_steps=1000, batch_size=100,
                  online_gradient_steps=0, train_every_n_ticks=100,
                  max_action_delta=0.03, decision_interval=20, model_dir="python/ml",
