@@ -1,41 +1,20 @@
-import ctypes
 import json
 import sys
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# --- Palette (matches DepthDisplay) -------------------------------------
-BG = "#0b0f14"          # window background
-CARD_BG = "#121821"     # card / axes background
-BORDER = "#1f2a37"      # card border / gridlines
-FG_MUTED = "#5b6b7d"    # labels / captions
-FG_PRIMARY = "#e6edf3"  # main readout values
-ACCENT = "#3ba7ff"      # depth / primary accent
-ACCENT_2 = "#8b5cf6"    # setpoint accent
-OK = "#2ecc71"          # tertiary accent (PWM)
-WARN = "#f5b942"
-BAD = "#ff5d5d"
-
+# Set global matplotlib parameters for academic style
 plt.rcParams.update({
-    "figure.facecolor": BG,
-    "axes.facecolor": CARD_BG,
-    "axes.edgecolor": BORDER,
-    "axes.labelcolor": FG_MUTED,
-    "axes.titlecolor": FG_PRIMARY,
-    "xtick.color": FG_MUTED,
-    "ytick.color": FG_MUTED,
-    "grid.color": BORDER,
-    "text.color": FG_PRIMARY,
-    "font.family": "Segoe UI",
-    "legend.facecolor": CARD_BG,
-    "legend.edgecolor": BORDER,
-    "legend.labelcolor": FG_PRIMARY,
+    "font.family": "serif",
+    "font.serif": ["Times New Roman"],
+    "mathtext.fontset": "stix"  # Optional: renders math equations matching Times styling
 })
 
 
 class Plotter:
-    def __init__(self, folder_path):
+    def __init__(self, folder_path, custom_title=None):
         self._folder_path = folder_path
+        self._custom_title = custom_title
         self._df = pd.read_csv(f"{self._folder_path}/processed.csv")
         self._df.dropna(how='all', inplace=True)
 
@@ -44,91 +23,45 @@ class Plotter:
         fig, axes = plt.subplots(3, 1, sharex=True, figsize=(11, 8.5), dpi=100)
         fig.subplots_adjust(hspace=0.25)
 
-        fig.suptitle(
-            f"EXPERIMENT {self._folder_path[5:]} RESULTS", fontsize=14,
-            fontweight="bold", color=FG_PRIMARY
-        )
+        # Use the custom title if provided, otherwise fallback to default string formatting
+        title_text = self._custom_title if self._custom_title else f"EXPERIMENT {self._folder_path[5:]} RESULTS"
+        fig.suptitle(title_text, fontsize=14, fontweight="bold")
 
         time = self._df["time_s"]
 
         # Depth plot (plot 1)
         depth = self._df["depth_filtered_m"]
-        axes[0].plot(time, depth, label="Depth (m)", color=ACCENT, linewidth=1.8)
+        axes[0].plot(time, depth, label="Depth (m)")
         if self._df["depth_setpoint_m"].notna().any():
             depth_setpoint = self._df["depth_setpoint_m"]
-            axes[0].plot(time, depth_setpoint, label="Depth Setpoint (m)", color=ACCENT_2, ls="--", linewidth=1.5)
-        axes[0].legend(loc="upper right", framealpha=0.9)
-        axes[0].grid(True, alpha=0.6)
-        axes[0].set_title("DEPTH", loc="left", fontsize=11, fontweight="bold", color=FG_MUTED, pad=8)
+            axes[0].plot(time, depth_setpoint, label="Depth Setpoint (m)", ls="--")
+        axes[0].legend(loc="upper right")
+        axes[0].grid(True)
+        axes[0].set_title("DEPTH", loc="left", fontsize=11, fontweight="bold")
 
         # Actuator plot (plot 2)
         actuator = self._df["actuator_mm"]
-        axes[1].plot(time, actuator, label="Actuator Position (mm)", color=ACCENT, linewidth=1.8)
+        axes[1].plot(time, actuator, label="Actuator Position (mm)")
         if self._df["actuator_setpoint_mm"].notna().any():
             actuator_setpoint = self._df["actuator_setpoint_mm"]
-            axes[1].plot(time, actuator_setpoint, label="Actuator Setpoint (mm)", color=ACCENT_2, ls="--", linewidth=1.5)
-        axes[1].legend(loc="upper right", framealpha=0.9)
-        axes[1].grid(True, alpha=0.6)
-        axes[1].set_title("ACTUATOR", loc="left", fontsize=11, fontweight="bold", color=FG_MUTED, pad=8)
+            axes[1].plot(time, actuator_setpoint, label="Actuator Setpoint (mm)", ls="--")
+        axes[1].legend(loc="upper right")
+        axes[1].grid(True)
+        axes[1].set_title("ACTUATOR", loc="left", fontsize=11, fontweight="bold")
 
         # PWM plot (plot 3)
         pwm = self._df["motor_cmd"]
-        axes[2].plot(time, pwm, label="Motor Voltage (V)", color=OK, linewidth=1.8)
-        axes[2].legend(loc="upper right", framealpha=0.9)
-        axes[2].grid(True, alpha=0.6)
-        axes[2].set_title("MOTOR VOLTAGE", loc="left", fontsize=11, fontweight="bold", color=FG_MUTED, pad=8)
+        axes[2].plot(time, pwm, label="Motor Voltage (V)")
+        axes[2].legend(loc="upper right")
+        axes[2].grid(True)
+        axes[2].set_title("MOTOR VOLTAGE", loc="left", fontsize=11, fontweight="bold")
 
-        axes[2].set_xlabel("Time (s)", color=FG_MUTED, fontsize=11, fontweight="bold")
-
-        for ax in axes:
-            for spine in ax.spines.values():
-                spine.set_color(BORDER)
-
-        self._style_toolbar(fig)
+        axes[2].set_xlabel("Time (s)", fontsize=11, fontweight="bold")
 
         plt.show()
 
-    @staticmethod
-    def _enable_dark_titlebar(window):
-        if sys.platform != "win32":
-            return
-        try:
-            window.update_idletasks()
-            hwnd = ctypes.windll.user32.GetParent(window.winfo_id())
-            value = ctypes.c_int(1)
-            for attribute in (20, 19):  # 20 = Win10 20H1+, 19 = older builds
-                result = ctypes.windll.dwmapi.DwmSetWindowAttribute(
-                    hwnd, attribute, ctypes.byref(value), ctypes.sizeof(value)
-                )
-                if result == 0:
-                    break
-        except Exception:
-            # not on Windows, or the DWM call isn't available — skip silently
-            pass
-
-    @staticmethod
-    def _style_toolbar(fig):
-        manager = getattr(fig.canvas, "manager", None)
-        toolbar = getattr(manager, "toolbar", None)
-        if toolbar is None:
-            return
-        try:
-            toolbar.configure(background=CARD_BG)
-            for child in toolbar.winfo_children():
-                try:
-                    child.configure(background=CARD_BG)
-                except Exception:
-                    pass
-            window = getattr(manager, "window", None)
-            if window is not None:
-                window.configure(background=BG)
-                Plotter._enable_dark_titlebar(window)
-        except Exception:
-            # backend isn't TkAgg or doesn't expose these widgets — skip styling
-            pass
 
 if __name__ == "__main__":
-    import sys
     from pathlib import Path
 
     # Map target path to relative directory
@@ -189,18 +122,21 @@ if __name__ == "__main__":
 
         if (chosen / "processed.csv").exists():
             selected_folder_path = str(chosen)
-            print(f"\nSelected folder path: {selected_folder_path}. Plotting...\n")
+            print(f"\nSelected folder path: {selected_folder_path}\n")
             break
 
-        # No processed.csv directly here (e.g. an archive folder like
-        # divesync-heavy-v3-data holding many past experiments) -- descend
-        # into it and show its contents instead of failing.
+        # No processed.csv directly here -- descend into it and show contents
         print(f"\n'{chosen.name}' has no processed.csv directly -- browsing its contents:\n")
         current_folder = chosen
 
+    # Prompt user for custom figure title
+    user_title = input("Enter a title for this run (press Enter for default): ").strip()
+
+    print("\nPlotting...\n")
+
     # Replay execution
     try:
-        plotter = Plotter(folder_path=selected_folder_path)
+        plotter = Plotter(folder_path=selected_folder_path, custom_title=user_title)
         plotter.plot()
     except FileNotFoundError:
         print(f"Error: 'processed.csv' not found inside {selected_folder_path}\n")
