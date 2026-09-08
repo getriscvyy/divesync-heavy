@@ -1,9 +1,0 @@
-{
-    "experiment-id": "20260710-145027",
-    "control-mode": "manual",
-    "requested-duration": 1000.0,
-    "actual-duration": 26.0724036693573,
-    "start-time": 1783713035.1140704,
-    "start-time-readable": "2026-07-10 14:50:35",
-    "notes": "human control -- bc training data"
-}
