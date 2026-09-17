@@ -1,6 +1,6 @@
-# DiveSync Heavy
+# DiveSync Heavy and Data Collection Structure
 
-An autonomous underwater depth-control vehicle built around an ESP32 and MS5837 depth sensor, using a linear actuator syringe mechanism (0–100mm stroke) for buoyancy-based depth control. This repo contains the firmware, hardware design files, and control software — including PID and reinforcement learning (TD3) controllers — developed as part of an undergraduate research project under Umar.
+An autonomous underwater depth-control vehicle built around an ESP32 and MS5837 depth sensor, using a linear actuator syringe mechanism (0–100mm stroke) for buoyancy-based depth control. This repo contains the firmware, hardware design files, and control software, including PID and reinforcement learning (TD3) controllers.
 
 ## Hardware Overview
 
